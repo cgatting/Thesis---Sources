@@ -1,0 +1,1 @@
+2025-11-12 11:28:11,689 - CRITICAL - Application failed to start: 'DeepResearchToolApp' object has no attribute 'refine_document'

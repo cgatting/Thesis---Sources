@@ -1,0 +1,168 @@
+@article{kettle_ssti_rce,
+  author      = {Kettle, James D.},
+  title       = {{Server-Side Template Injection: RCE for the Modern Webapp}},
+  journal     = {Black Hat USA},
+  year        = {2015},
+  url         = {https://www.blackhat.com/docs/us-15/materials/us-15-Kettle-Server-Side-Template-Injection-RCE-For-The-Modern-Webapp.pdf},
+  note        = {Definitive paper defining the SSTI attack and RCE methodology.}
+}
+
+@article{ezenwoye_injection_mitigation,
+  author      = {Ezenwoye, Onyeka},
+  title       = {{Mitigating Injection-Based Weaknesses: A Flexible Template Architecture}},
+  journal     = {Journal of Object Technology},
+  volume      = {23},
+  number      = {1},
+  year        = {2024},
+  doi         = {10.5381/jot.2024.23.1.a3},
+  note        = {Discusses architectural templates for mitigating injection classes like SSTI.}
+}
+
+@article{snyk_prototype_pollution,
+  author      = {{Snyk}},
+  title       = {{What is Prototype Pollution?}},
+  year        = {2023},
+  url         = {https://snyk.io/learn/javascript/prototype-pollution/},
+  note        = {Covers the anatomy of Prototype Pollution and its emergence in JavaScript libraries.}
+}
+
+@article{mdn_prototype_defenses,
+  author      = {{MDN Web Docs}},
+  title       = {{JavaScript prototype pollution}},
+  year        = {2025},
+  url         = {https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/Prototype_pollution},
+  note        = {Details defenses including input validation, Object.create(null), and Node.js flags.}
+}
+
+@misc{contrast_insecure_deserialization,
+  author      = {{Contrast Security}},
+  title       = {{What is Insecure Deserialization?}},
+  year        = {2024},
+  url         = {https://www.contrastsecurity.com/glossary/insecure-deserialization},
+  note        = {Covers the mechanism and common languages susceptible to deserialization RCE.}
+}
+
+@misc{imperva_deserialization_risks,
+  author      = {{Imperva}},
+  title       = {{What is Deserialization | Security Risks \& Mitigation}},
+  year        = {2024},
+  url         = {https://www.imperva.com/learn/application-security/deserialization/},
+  note        = {Discusses RCE, Replay Attacks, and mitigation via WAF/RASP.}
+}
+
+@book{owasp_xxe_cwe,
+  author      = {{OWASP Foundation}},
+  title       = {{XML External Entity (XXE) Processing}},
+  year        = {2024},
+  url         = {https://owasp.org/www-community/vulnerabilities/XML_External_Entity_(XXE)_Processing},
+  note        = {Defines XXE, related CWEs (CWE-611), and risk factors.}
+}
+
+@article{portswigger_xxe_injection,
+  author      = {{PortSwigger Web Security}},
+  title       = {{What is XXE (XML external entity) injection? Tutorial \& Examples}},
+  year        = {2024},
+  url         = {https://portswigger.net/web-security/xxe},
+  note        = {Explains file retrieval and SSRF via XXE injection.}
+}
+
+@misc{firewalls_toctou,
+  author      = {{Firewalls.com}},
+  title       = {{Time-Of-Check-Time-Of-Use}},
+  year        = {2023},
+  url         = {https://www.firewalls.com/blog/security-terms/time-check-time-use/},
+  note        = {Basic definition and prevention via prioritizing file access.}
+}
+
+@article{wikipedia_toctou,
+  author      = {{Wikipedia Contributors}},
+  title       = {{Time-of-check to time-of-use}},
+  journal     = {{Wikipedia, The Free Encyclopedia}},
+  year        = {2025},
+  url         = {https://en.wikipedia.org/wiki/Time-of-check_to_time-of-use},
+  note        = {Details the race condition, historical examples (BSD, OpenSSH), and the EAFP vs LBYL philosophy.}
+}
+
+@techreport{nist_ssdf,
+  author      = {{National Institute of Standards and Technology (NIST)}},
+  title       = {{Software Development Security Framework (SSDF)}},
+  number      = {SP 800-218},
+  year        = {2022},
+  institution = {U.S. Department of Commerce},
+  url         = {https://csrc.nist.gov/pubs/sp/800/218/final},
+  type        = {Special Publication},
+  note        = {A key secure SDLC framework for government and industry.}
+}
+
+@misc{microsoft_sdl,
+  author      = {{Microsoft}},
+  title       = {{Microsoft Security Development Lifecycle (SDL) Practices}},
+  year        = {2023},
+  url         = {https://www.microsoft.com/security/engineering/sdl},
+  note        = {Industry-leading framework that integrates security into every phase of the SDLC.}
+}
+
+@misc{leanware_sdl_guide,
+  author      = {{Leanware}},
+  title       = {{Secure Development Lifecycle (SDL) Guide | Best Practices}},
+  year        = {2025},
+  url         = {https://www.leanware.co/insights/secure-development-lifecycle-guide},
+  note        = {Discusses SDL phases including Threat Modeling (STRIDE) and Testing (SAST/DAST).}
+}
+
+@techreport{crest_quantitative_analysis,
+  author      = {{CREST}},
+  title       = {{How to Deliver Quantitative Analysis}},
+  year        = {2024},
+  url         = {https://cmage.crest-approved.org/quantitative-analysis.pdf},
+  note        = {Defines Quantitative Assessment of cyber risk using threat, vulnerability, and impact factors.}
+}
+
+@article{bitsight_risk_assessment,
+  author      = {{Bitsight}},
+  title       = {{How to Get the Most Out of Cybersecurity Quantitative Risk Assessments}},
+  year        = {2023},
+  url         = {https://www.bitsight.com/blog/quantitative-risk-assessments},
+  note        = {Emphasizes the need for trusted data and running scenario-based risk quantification.}
+}
+
+@misc{balbix_crq_platforms,
+  author      = {{Balbix}},
+  title       = {{Top 7 Cyber Risk Quantification Platforms to Measure and Mitigate Risk}},
+  year        = {2025},
+  url         = {https://www.balbix.com/insights/top-cyber-risk-quantification-crq-platforms-to-measure-and-mitigate-risk/},
+  note        = {Overview of CRQ platforms that prioritize risk based on financial and operational impact.}
+}
+
+@misc{geeksforgeeks_ssdlc,
+  author      = {{GeeksforGeeks}},
+  title       = {{What is Secure Software Development Life Cycle (SSDLC)?}},
+  year        = {2025},
+  url         = {https://www.geeksforgeeks.org/ethical-hacking/what-is-secure-software-development-life-cycle-ssdlc/},
+  note        = {General overview of SSDLC, its principles, and challenges like lack of security knowledge.}
+}
+
+@article{researchgate_ssti_exploit,
+  author      = {Jha, Suraj and Singh, Manan},
+  title       = {{Server-Side Template Injection with Custom Exploit}},
+  journal     = {ResearchGate},
+  year        = {2021},
+  url         = {https://www.researchgate.net/publication/352393904_Server-Side_Template_Injection_with_Custom_Exploit},
+  note        = {Discusses the process of exploitation including probing and exploiting built-in methods.}
+}
+
+@misc{startupdefense_deserialization_prevention,
+  author      = {{Startup Defense}},
+  title       = {{Insecure Deserialization: A Guide to Prevention and Detection}},
+  year        = {2024},
+  url         = {https://www.startupdefense.io/cyberattacks/insecure-deserialization},
+  note        = {Provides key prevention practices including input validation and whitelisting.}
+}
+
+@misc{tangiblesecurity_sdl_alignment,
+  author      = {{Tangible Security}},
+  title       = {{Secure Development Lifecycle Services}},
+  year        = {2024},
+  url         = {https://tangiblesecurity.com/secure-development-lifecycle-services/},
+  note        = {Mentions alignment with major frameworks like Microsoft SDL, OWASP SAMM, and NIST SSDF.}
+}

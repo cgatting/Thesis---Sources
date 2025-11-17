@@ -261,7 +261,14 @@ class DocumentParser:
                 sentence_text = self._clean_sentence(sentence_text)
                 
                 # Skip very short sentences
-                if len(sentence_text.split()) < 6:
+                min_len = 6
+                try:
+                    if self.config is not None:
+                        proc = self.config.get_processing_config()
+                        min_len = int(proc.get("min_sentence_length", min_len))
+                except Exception:
+                    pass
+                if len(sentence_text.split()) < min_len:
                     continue
                 
                 sentence = Sentence(sentence_text.strip(), section_name, sentence_idx)

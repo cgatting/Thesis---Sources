@@ -1,0 +1,118 @@
+Thesis Proposal Generation
+Date: 2025-11-12
+Research Field: Applied Machine Learning
+Thesis Name: Thesis Product
+
+=== Thesis Title Ideas (100) ===
+1. Energy Efficiency in Applied Machine Learning via Meta-Learning using satellite imagery for Scientific Discovery
+2. Fairness in Applied Machine Learning via Self-Supervised Learning using time-series logs for Healthcare
+3. Towards Calibration in Applied Machine Learning: Transformers on transaction graphs for Manufacturing
+4. Active Learning in Applied Machine Learning via Graph Neural Networks using speech and dialog data for Transportation
+5. Towards Annotation Efficiency in Applied Machine Learning: Self-Supervised Learning on time-series logs for Finance
+6. Towards Uncertainty Quantification in Applied Machine Learning: Federated Learning on transaction graphs for Scientific Discovery
+7. Transformers for Active Learning with edge-collected datasets in Public Policy
+8. Towards Calibration in Applied Machine Learning: Graph Neural Networks on edge-collected datasets for Healthcare
+9. Probabilistic Programming for Benchmarking with privacy-sensitive user telemetry in Education
+10. Self-Supervised Learning for Reinforcement Learning with speech and dialog data in Cybersecurity
+11. Towards Scalable Training in Applied Machine Learning: Causal Inference on clinical records for Healthcare
+12. Diffusion Models for Benchmarking with text corpora in Manufacturing
+13. Towards Simulation-To-Real in Applied Machine Learning: Meta-Learning on edge-collected datasets for Climate Science
+14. Towards Annotation Efficiency in Applied Machine Learning: Contrastive Learning on time-series logs for Education
+15. Probabilistic Programming for Robustness with speech and dialog data in Finance
+16. Drift Detection in Applied Machine Learning via Causal Inference using knowledge graphs for Finance
+17. Semi-Supervised Learning in Applied Machine Learning via Reinforcement Learning using speech and dialog data for Public Policy
+18. Federated Learning for Scalable Training with multimodal sensors in Transportation
+19. Causal Inference for Causality with text corpora in Climate Science
+20. Towards Graph Learning in Applied Machine Learning: Diffusion Models on transaction graphs for Transportation
+21. Fairness in Applied Machine Learning via Bayesian Modeling using knowledge graphs for Public Policy
+22. Towards Fairness in Applied Machine Learning: Contrastive Learning on edge-collected datasets for Manufacturing
+23. Contrastive Learning for Reproducibility with knowledge graphs in Scientific Discovery
+24. Energy Efficiency in Applied Machine Learning via Transformers using satellite imagery for Education
+25. Fairness in Applied Machine Learning via Probabilistic Programming using clinical records for Education
+26. Semi-Supervised Learning in Applied Machine Learning via Diffusion Models using knowledge graphs for Scientific Discovery
+27. Towards Benchmarking in Applied Machine Learning: Probabilistic Programming on knowledge graphs for Climate Science
+28. Simulation-To-Real in Applied Machine Learning via Federated Learning using privacy-sensitive user telemetry for Transportation
+29. Drift Detection in Applied Machine Learning via Diffusion Models using clinical records for Transportation
+30. Towards Simulation-To-Real in Applied Machine Learning: Diffusion Models on text corpora for Finance
+31. Towards Graph Learning in Applied Machine Learning: Diffusion Models on text corpora for Healthcare
+32. Towards Benchmarking in Applied Machine Learning: Causal Inference on privacy-sensitive user telemetry for Finance
+33. Towards Multimodal Fusion in Applied Machine Learning: Transformers on text corpora for Manufacturing
+34. Federated Optimization in Applied Machine Learning via Bayesian Modeling using speech and dialog data for Transportation
+35. Towards Causality in Applied Machine Learning: Bayesian Modeling on transaction graphs for Education
+36. Graph Neural Networks for Energy Efficiency with multimodal sensors in Manufacturing
+37. Diffusion Models for Uncertainty Quantification with multimodal sensors in E-Commerce
+38. Towards Benchmarking in Applied Machine Learning: Probabilistic Programming on transaction graphs for Public Policy
+39. Annotation Efficiency in Applied Machine Learning via Probabilistic Programming using privacy-sensitive user telemetry for Manufacturing
+40. Towards Time-Series Forecasting in Applied Machine Learning: Reinforcement Learning on knowledge graphs for Finance
+41. Towards Privacy in Applied Machine Learning: Meta-Learning on time-series logs for E-Commerce
+42. Calibration in Applied Machine Learning via Reinforcement Learning using multimodal sensors for Cybersecurity
+43. Self-Supervised Learning for Annotation Efficiency with edge-collected datasets in Cybersecurity
+44. Towards Drift Detection in Applied Machine Learning: Meta-Learning on multimodal sensors for Manufacturing
+45. Towards Time-Series Forecasting in Applied Machine Learning: Graph Neural Networks on transaction graphs for Finance
+46. Reinforcement Learning for Time-Series Forecasting with edge-collected datasets in Climate Science
+47. Calibration in Applied Machine Learning via Causal Inference using speech and dialog data for Education
+48. Drift Detection in Applied Machine Learning via Bayesian Modeling using knowledge graphs for Healthcare
+49. Probabilistic Programming for Synthetic Data Generation with privacy-sensitive user telemetry in Cybersecurity
+50. Synthetic Data Generation in Applied Machine Learning via Causal Inference using transaction graphs for Education
+51. Towards Uncertainty Quantification in Applied Machine Learning: Probabilistic Programming on speech and dialog data for Education
+52. Towards Privacy in Applied Machine Learning: Self-Supervised Learning on clinical records for Finance
+53. Towards Explainability in Applied Machine Learning: Graph Neural Networks on privacy-sensitive user telemetry for Education
+54. Privacy in Applied Machine Learning via Reinforcement Learning using speech and dialog data for Public Policy
+55. Reinforcement Learning in Applied Machine Learning via Diffusion Models using satellite imagery for E-Commerce
+56. Time-Series Forecasting in Applied Machine Learning via Federated Learning using transaction graphs for Scientific Discovery
+57. Causal Inference for Graph Learning with clinical records in Cybersecurity
+58. Towards Synthetic Data Generation in Applied Machine Learning: Transformers on text corpora for Education
+59. Transformers for Time-Series Forecasting with multimodal sensors in Education
+60. Towards Human-In-The-Loop in Applied Machine Learning: Diffusion Models on text corpora for Scientific Discovery
+61. Bayesian Modeling for Uncertainty Quantification with privacy-sensitive user telemetry in Healthcare
+62. Annotation Efficiency in Applied Machine Learning via Meta-Learning using speech and dialog data for E-Commerce
+63. Towards Benchmarking in Applied Machine Learning: Contrastive Learning on privacy-sensitive user telemetry for Public Policy
+64. Towards Reinforcement Learning in Applied Machine Learning: Meta-Learning on edge-collected datasets for Manufacturing
+65. Towards Semi-Supervised Learning in Applied Machine Learning: Transformers on edge-collected datasets for Finance
+66. Explainability in Applied Machine Learning via Transformers using privacy-sensitive user telemetry for Public Policy
+67. Towards Human-In-The-Loop in Applied Machine Learning: Contrastive Learning on speech and dialog data for Transportation
+68. Probabilistic Programming for Time-Series Forecasting with satellite imagery in Education
+69. Semi-Supervised Learning in Applied Machine Learning via Federated Learning using multimodal sensors for Cybersecurity
+70. Bayesian Modeling for Reinforcement Learning with edge-collected datasets in E-Commerce
+71. Meta-Learning for Domain Adaptation with speech and dialog data in Education
+72. Towards Benchmarking in Applied Machine Learning: Self-Supervised Learning on edge-collected datasets for Scientific Discovery
+73. Semi-Supervised Learning in Applied Machine Learning via Bayesian Modeling using time-series logs for Cybersecurity
+74. Graph Learning in Applied Machine Learning via Probabilistic Programming using satellite imagery for Public Policy
+75. Self-Supervised Learning for Simulation-To-Real with time-series logs in E-Commerce
+76. Towards Causality in Applied Machine Learning: Bayesian Modeling on knowledge graphs for Manufacturing
+77. Reinforcement Learning in Applied Machine Learning via Self-Supervised Learning using edge-collected datasets for Manufacturing
+78. Uncertainty Quantification in Applied Machine Learning via Federated Learning using text corpora for Finance
+79. Towards Causality in Applied Machine Learning: Transformers on satellite imagery for Healthcare
+80. Towards Graph Learning in Applied Machine Learning: Federated Learning on knowledge graphs for Healthcare
+81. Towards Reproducibility in Applied Machine Learning: Causal Inference on time-series logs for Cybersecurity
+82. Graph Neural Networks for Annotation Efficiency with time-series logs in Manufacturing
+83. Towards Few-Shot Learning in Applied Machine Learning: Transformers on transaction graphs for Cybersecurity
+84. Towards Annotation Efficiency in Applied Machine Learning: Transformers on time-series logs for Manufacturing
+85. Towards Semi-Supervised Learning in Applied Machine Learning: Contrastive Learning on transaction graphs for Cybersecurity
+86. Towards Domain Adaptation in Applied Machine Learning: Self-Supervised Learning on text corpora for Education
+87. Towards Few-Shot Learning in Applied Machine Learning: Meta-Learning on time-series logs for Healthcare
+88. Few-Shot Learning in Applied Machine Learning via Probabilistic Programming using speech and dialog data for Finance
+89. Multimodal Fusion in Applied Machine Learning via Bayesian Modeling using time-series logs for Manufacturing
+90. Towards Simulation-To-Real in Applied Machine Learning: Contrastive Learning on transaction graphs for E-Commerce
+91. Simulation-To-Real in Applied Machine Learning via Contrastive Learning using edge-collected datasets for Climate Science
+92. Towards Synthetic Data Generation in Applied Machine Learning: Federated Learning on knowledge graphs for Cybersecurity
+93. Drift Detection in Applied Machine Learning via Graph Neural Networks using transaction graphs for E-Commerce
+94. Robustness in Applied Machine Learning via Diffusion Models using satellite imagery for Manufacturing
+95. Towards Human-In-The-Loop in Applied Machine Learning: Graph Neural Networks on transaction graphs for Healthcare
+96. Benchmarking in Applied Machine Learning via Federated Learning using transaction graphs for Scientific Discovery
+97. Energy Efficiency in Applied Machine Learning via Bayesian Modeling using edge-collected datasets for Climate Science
+98. Diffusion Models for Few-Shot Learning with privacy-sensitive user telemetry in Healthcare
+99. Towards Federated Optimization in Applied Machine Learning: Meta-Learning on privacy-sensitive user telemetry for E-Commerce
+100. Privacy in Applied Machine Learning via Self-Supervised Learning using time-series logs for Cybersecurity
+
+=== Product Summary (300 words) ===
+
+Thesis Product advances Applied Machine Learning by delivering a rigorous, deployable research product that bridges methodological innovation and real-world impact. The work positions modern learning techniques within a responsible framework, emphasizing transparency, reliability, and stakeholder trust.
+
+Despite rapid progress in machine learning, many systems remain difficult to explain, fragile under distribution shift, and constrained by privacy and compliance demands. Organizations need validated approaches that balance accuracy with governance, enabling safe adoption in high-stakes domains.
+
+The proposed solution integrates transformers and graph-based models with causal analysis, uncertainty estimation, and federated optimization to produce robust, privacy-preserving pipelines. Methodology includes dataset curation, reproducible training, ablation studies, calibration, and comprehensive evaluation across benchmark tasks (Doshi-Velez & Kim, 2017; Kairouz et al., 2021).
+
+Expected outcomes include state-of-the-art performance with interpretable outputs, measurable fairness improvements, reduced drift, and energy-aware training. The product contributes open evaluation artifacts, deployment guides, and policy-aligned reporting, supporting researchers and practitioners across sectors.
+
+The evaluation plan covers cross-domain generalization, stress testing under realistic noise, and longitudinal monitoring with human-in-the-loop validation. Results are presented with confidence intervals, sensitivity analyses, and error taxonomies to inform decision makers and align with academic best practices.

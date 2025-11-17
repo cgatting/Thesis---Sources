@@ -53,6 +53,7 @@ class Settings:
         "enable_multiprocessing": True,
         "max_workers": 4,
         "timeout_seconds": 300,
+        "numeric_rel_tol": 0.07,
     })
     
     output: Dict[str, Any] = field(default_factory=lambda: {

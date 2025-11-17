@@ -52,13 +52,17 @@ class ScoringEngine:
         "ablation", "bayesian", "rl", "reinforcement", "regression", "classification", "segmentation",
         "cosine", "euclidean", "kmeans", "dbscan", "lstm", "gru", "transformer", "attention",
         "precision", "recall", "f1", "accuracy", "auc", "roc", "mae", "rmse", "mape", "cross-validation",
-        "benchmark", "dataset", "corpus", "experiment", "controlled study", "user study"
+        "benchmark", "dataset", "corpus", "experiment", "controlled study", "user study",
+        "svd", "pca", "anova", "t-test", "manova", "bayes", "cnn", "gan", "resnet", "vgg",
+        "sentence transformer", "word2vec", "fasttext", "topic model", "lda"
     }
     
     # Scientific units
     UNITS: List[str] = [
         "%", "percent", "ms", "s", "sec", "seconds", "minutes", "hours", "hz", "khz", "mhz", "ghz",
-        "v", "mv", "ma", "a", "w", "kw", "db", "°c", "c", "kelvin", "k", "gb", "mb", "kb"
+        "v", "mv", "ma", "a", "w", "kw", "db", "°c", "c", "kelvin", "k", "gb", "mb", "kb",
+        "mm", "cm", "m", "km", "mg", "g", "kg", "°f", "mph", "km/h", "n", "nm", "µm", "mmhg",
+        "mbps", "kbps", "fps"
     ]
     
     # High-authority venues
@@ -80,6 +84,11 @@ class ScoringEngine:
         """
         self.config = config
         self.weights = self.DEFAULT_WEIGHTS.copy()
+        try:
+            if self.config is not None:
+                self.weights = self.config.get_scoring_weights()
+        except Exception:
+            pass
         
         # Initialize NLP components
         self._initialize_nlp_components()
@@ -324,6 +333,12 @@ class ScoringEngine:
     
     def _number_unit_match(self, sentence: str, source: str, rel_tol: float = 0.07) -> Tuple[float, List[str]]:
         """Match numbers and units between sentence and source."""
+        try:
+            if self.config is not None:
+                proc = self.config.get_processing_config()
+                rel_tol = float(proc.get("numeric_rel_tol", rel_tol))
+        except Exception:
+            pass
         sentence_pairs = self._extract_numbers_units(sentence)
         source_pairs = self._extract_numbers_units(source)
         

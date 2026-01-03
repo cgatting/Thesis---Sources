@@ -74,6 +74,7 @@ class AnalysisTab(QWidget):
         self.doc_path_edit = QLineEdit()
         self.doc_path_edit.setPlaceholderText("Select a LaTeX (.tex) or PDF (.pdf) document")
         layout.addWidget(self.doc_path_edit, 0, 1)
+        self.doc_path_edit.textChanged.connect(self._on_doc_text_changed)
         
         browse_doc_btn = QPushButton("Browse...")
         browse_doc_btn.clicked.connect(self.browse_document)
@@ -101,6 +102,7 @@ class AnalysisTab(QWidget):
         )
         self.sources_text.setMaximumHeight(100)
         sources_layout.addWidget(self.sources_text)
+        self.sources_text.textChanged.connect(self._on_sources_text_changed)
         
         # Buttons
         buttons_layout = QVBoxLayout()
@@ -229,6 +231,14 @@ class AnalysisTab(QWidget):
         """Clear all source files."""
         self.sources_text.clear()
         self.source_paths = []
+        self.update_sources_info()
+        self.update_run_button_state()
+
+    def _on_doc_text_changed(self, _text: str):
+        self.update_document_info()
+        self.update_run_button_state()
+
+    def _on_sources_text_changed(self):
         self.update_sources_info()
         self.update_run_button_state()
     

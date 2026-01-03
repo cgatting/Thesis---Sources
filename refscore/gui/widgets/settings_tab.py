@@ -8,7 +8,8 @@ adjust application preferences, scoring weights, and processing options.
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox, QPushButton,
     QLabel, QLineEdit, QSpinBox, QDoubleSpinBox, QCheckBox,
-    QTabWidget, QComboBox, QTextEdit, QFrame, QMessageBox, QGridLayout
+    QTabWidget, QComboBox, QTextEdit, QFrame, QMessageBox, QGridLayout,
+    QProgressDialog
 )
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont
@@ -20,6 +21,7 @@ from typing import List
 from ...utils.config import Config
 from ...utils.validators import InputValidator
 from ...utils.exceptions import ValidationError
+from ...training.weights_trainer import WeightsTrainer
 
 
 log = logging.getLogger(__name__)
@@ -131,6 +133,49 @@ class SettingsTab(QWidget):
         
         presets_layout.addStretch()
         layout.addWidget(presets_group)
+
+        train_group = QGroupBox("Train & Presets")
+        train_layout = QGridLayout(train_group)
+
+        train_layout.addWidget(QLabel("Preset Name"), 0, 0)
+        self.preset_name_edit = QLineEdit()
+        self.preset_name_edit.setPlaceholderText("best")
+        train_layout.addWidget(self.preset_name_edit, 0, 1)
+
+        train_layout.addWidget(QLabel("Search Space"), 1, 0)
+        self.search_space_edit = QLineEdit()
+        self.search_space_edit.setPlaceholderText("alignment=0.4:0.6:0.05 entities=0.1:0.3:0.05 number_unit=0.15:0.25:0.05")
+        train_layout.addWidget(self.search_space_edit, 1, 1)
+
+        self.strict_sources_checkbox = QCheckBox("Strict source validation")
+        self.strict_sources_checkbox.setChecked(True)
+        train_layout.addWidget(self.strict_sources_checkbox, 2, 0, 1, 2)
+
+        self.train_btn = QPushButton("Train Weights")
+        self.train_btn.clicked.connect(self.train_weights)
+        train_layout.addWidget(self.train_btn, 3, 0, 1, 2)
+
+        train_layout.addWidget(QLabel("Saved Presets"), 4, 0)
+        self.presets_combo = QComboBox()
+        train_layout.addWidget(self.presets_combo, 4, 1)
+
+        self.refresh_presets_btn = QPushButton("Refresh")
+        self.refresh_presets_btn.clicked.connect(self.refresh_presets)
+        train_layout.addWidget(self.refresh_presets_btn, 5, 0)
+
+        self.apply_preset_btn = QPushButton("Apply")
+        self.apply_preset_btn.clicked.connect(self.apply_saved_preset)
+        train_layout.addWidget(self.apply_preset_btn, 5, 1)
+
+        self.rollback_btn = QPushButton("Rollback")
+        self.rollback_btn.clicked.connect(self.rollback_preset)
+        train_layout.addWidget(self.rollback_btn, 6, 0, 1, 2)
+
+        self.training_status_label = QLabel()
+        train_layout.addWidget(self.training_status_label, 7, 0, 1, 2)
+
+        layout.addWidget(train_group)
+        self.refresh_presets()
         
         layout.addStretch()
         return widget
@@ -461,6 +506,161 @@ class SettingsTab(QWidget):
                     self.weight_spinboxes[key].setValue(value)
             
             self.validate_weights()
+
+    def _parse_search_space(self) -> dict:
+        text = self.search_space_edit.text().strip()
+        if not text:
+            weights = {}
+            for k, sb in self.weight_spinboxes.items():
+                v = float(sb.value())
+                lo = max(0.0, round(v - 0.1, 2))
+                hi = min(1.0, round(v + 0.1, 2))
+                step = 0.05
+                weights[k] = (lo, hi, step)
+            return weights
+        parts = text.split()
+        space = {}
+        for p in parts:
+            if "=" not in p or ":" not in p:
+                continue
+            k, rng = p.split("=", 1)
+            try:
+                lo_s, hi_s, step_s = rng.split(":")
+                lo = float(lo_s)
+                hi = float(hi_s)
+                step = float(step_s)
+                space[k] = (lo, hi, step)
+            except Exception:
+                pass
+        return space
+
+    def _current_paths(self):
+        parent = self.window()
+        doc_path = ""
+        src_paths = []
+        try:
+            if hasattr(parent, "analysis_tab"):
+                doc_path = parent.analysis_tab.get_document_path()
+            if hasattr(parent, "sources_tab"):
+                src_paths = parent.sources_tab.get_source_paths()
+            if not src_paths and hasattr(parent, "analysis_tab"):
+                src_paths = parent.analysis_tab.get_source_paths()
+            if not doc_path and hasattr(parent, "relevant_tab"):
+                try:
+                    files = getattr(parent.relevant_tab, "uploaded_files", [])
+                    if files:
+                        doc_path = files[-1].get("path", "")
+                except Exception:
+                    pass
+        except Exception:
+            doc_path = ""
+            src_paths = []
+        return doc_path, src_paths
+
+    def _validate_training_files(self, doc_path: str, src_paths: list) -> bool:
+        try:
+            validator = InputValidator()
+            validator.validate_document_file(doc_path)
+            if not src_paths:
+                raise ValidationError("At least one source file must be provided")
+            for p in src_paths:
+                validator.validate_source_file(p)
+            if self.strict_sources_checkbox.isChecked():
+                missing = [p for p in src_paths if not Path(p).exists()]
+                if missing:
+                    QMessageBox.warning(self, "Missing Sources", f"These files are missing:\n" + "\n".join(missing))
+                    return False
+            return True
+        except ValidationError as e:
+            QMessageBox.critical(self, "Invalid File", str(e))
+            return False
+
+    def train_weights(self):
+        doc_path, src_paths = self._current_paths()
+        if not doc_path:
+            QMessageBox.warning(self, "Missing Files", "Document not selected.")
+            return
+        if not src_paths:
+            QMessageBox.warning(self, "Missing Files", "No source files selected.")
+            return
+        if not self._validate_training_files(doc_path, src_paths):
+            return
+        progress = QProgressDialog("Training weights...", "Cancel", 0, 0, self)
+        progress.setWindowModality(Qt.WindowModal)
+        progress.setAutoClose(True)
+        progress.show()
+        try:
+            trainer = WeightsTrainer(self.config)
+            space = self._parse_search_space()
+            jobs = [(doc_path, src_paths)]
+            best_w, metrics = trainer.train(jobs, space)
+            self.config.set_scoring_weights(best_w)
+            for k, v in best_w.items():
+                if k in self.weight_spinboxes:
+                    self.weight_spinboxes[k].setValue(v)
+            preset_name = self.preset_name_edit.text().strip() or "best"
+            preset_id = trainer.save_preset(preset_name, best_w, metrics, {"search_space": space})
+            self.config.save_configuration()
+            self.config_info_text.setPlainText(self.config.get_config_summary())
+            doc_name = Path(doc_path).name if doc_path else ""
+            self.training_status_label.setText(f"Doc={doc_name} sources={len(src_paths)} avg_top={metrics.get('avg_top_score', 0.0):.3f} coverage={metrics.get('overall_coverage', 0.0):.3f} saved={preset_id}")
+            self.refresh_presets()
+            QMessageBox.information(self, "Training Complete", "Optimized weights trained and saved.")
+        except Exception as e:
+            QMessageBox.critical(self, "Training Error", str(e))
+        finally:
+            progress.close()
+
+    def refresh_presets(self):
+        try:
+            trainer = WeightsTrainer(self.config)
+            items = trainer.list_presets()
+            self.presets_combo.clear()
+            for e in items:
+                name = e.get("name") or ""
+                pid = e.get("id") or ""
+                label = f"{name} ({pid})" if name else pid
+                self.presets_combo.addItem(label, pid)
+        except Exception:
+            self.presets_combo.clear()
+
+    def apply_saved_preset(self):
+        idx = self.presets_combo.currentIndex()
+        if idx < 0:
+            return
+        pid = self.presets_combo.itemData(idx)
+        try:
+            trainer = WeightsTrainer(self.config)
+            ok = trainer.apply_preset(pid)
+            if ok:
+                weights = self.config.get_scoring_weights()
+                for k, v in weights.items():
+                    if k in self.weight_spinboxes:
+                        self.weight_spinboxes[k].setValue(v)
+                self.config.save_configuration()
+                self.config_info_text.setPlainText(self.config.get_config_summary())
+                QMessageBox.information(self, "Preset Applied", "Weights preset applied.")
+            else:
+                QMessageBox.warning(self, "Apply Failed", "Failed to apply preset.")
+        except Exception as e:
+            QMessageBox.critical(self, "Apply Error", str(e))
+
+    def rollback_preset(self):
+        try:
+            trainer = WeightsTrainer(self.config)
+            last = trainer.rollback()
+            if last:
+                weights = self.config.get_scoring_weights()
+                for k, v in weights.items():
+                    if k in self.weight_spinboxes:
+                        self.weight_spinboxes[k].setValue(v)
+                self.config.save_configuration()
+                self.config_info_text.setPlainText(self.config.get_config_summary())
+                QMessageBox.information(self, "Rolled Back", "Rolled back to previous preset.")
+            else:
+                QMessageBox.information(self, "No History", "No previous preset to rollback.")
+        except Exception as e:
+            QMessageBox.critical(self, "Rollback Error", str(e))
     
     def validate_weights(self) -> bool:
         """Validate scoring weights."""

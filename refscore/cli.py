@@ -28,8 +28,24 @@ def setup_logging(level: str = "INFO") -> None:
     logging.basicConfig(
         level=numeric_level,
         format='[%(levelname)s] %(message)s',
-        stream=sys.stdout
+        stream=sys.stdout,
+        force=True
     )
+    logging.getLogger("quantulum3").setLevel(logging.WARNING)
+    logging.getLogger("sentence_transformers").setLevel(logging.WARNING)
+    logging.getLogger("transformers").setLevel(logging.WARNING)
+    logging.getLogger("torch").setLevel(logging.WARNING)
+    try:
+        import warnings
+        if numeric_level >= logging.ERROR:
+            warnings.filterwarnings("ignore")
+            try:
+                from sklearn.exceptions import InconsistentVersionWarning
+                warnings.filterwarnings("ignore", category=InconsistentVersionWarning)
+            except Exception:
+                pass
+    except Exception:
+        pass
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -114,6 +130,40 @@ Examples:
         action="version",
         version="%(prog)s 1.0.0"
     )
+
+    parser.add_argument(
+        "--train-weights",
+        action="store_true",
+        help="Train optimized scoring weights using provided doc and sources"
+    )
+    parser.add_argument(
+        "--apply-preset",
+        help="Apply a saved weights preset by id or name"
+    )
+    parser.add_argument(
+        "--preset-name",
+        help="Preset name for saving trained weights"
+    )
+    parser.add_argument(
+        "--search-space",
+        nargs='*',
+        help="Weight ranges as key=min:max:step (e.g., alignment=0.5:0.8:0.1)"
+    )
+    parser.add_argument(
+        "--list-presets",
+        action="store_true",
+        help="List saved weight presets"
+    )
+    parser.add_argument(
+        "--rollback-preset",
+        action="store_true",
+        help="Rollback to previous applied preset"
+    )
+    parser.add_argument(
+        "--minimal",
+        action="store_true",
+        help="Minimal output: suppress logs and show only progress bar/errors"
+    )
     
     return parser.parse_args()
 
@@ -163,6 +213,58 @@ def run_analysis(args: argparse.Namespace) -> None:
     logger = logging.getLogger(__name__)
     
     try:
+        if args.apply_preset:
+            from .training.weights_trainer import WeightsTrainer
+            wt = WeightsTrainer()
+            applied = wt.apply_preset(args.apply_preset)
+            if not applied:
+                logger.warning(f"Failed to apply preset: {args.apply_preset}")
+            else:
+                logger.info(f"Applied preset: {args.apply_preset}")
+        if args.list_presets:
+            from .training.weights_trainer import WeightsTrainer
+            wt = WeightsTrainer()
+            presets = wt.list_presets()
+            print(json.dumps(presets, indent=2))
+            return
+        if args.rollback_preset:
+            from .training.weights_trainer import WeightsTrainer
+            wt = WeightsTrainer()
+            prev = wt.rollback()
+            logger.info(f"Rolled back to: {prev}")
+            return
+        if args.train_weights:
+            from .training.weights_trainer import WeightsTrainer
+            def parse_space(items: Optional[List[str]]):
+                space = {}
+                if not items:
+                    return space
+                for it in items:
+                    k, rng = it.split('=')
+                    lo, hi, st = rng.split(':')
+                    space[k.strip()] = (float(lo), float(hi), float(st))
+                return space
+            wt = WeightsTrainer()
+            space = parse_space(args.search_space)
+            jobs = [(args.doc, args.sources)]
+            best_w, metrics = wt.train(jobs, space or {
+                "alignment": (0.4, 0.8, 0.1),
+                "entities": (0.05, 0.2, 0.05),
+                "number_unit": (0.05, 0.2, 0.05),
+                "method_metric": (0.05, 0.15, 0.05),
+                "recency": (0.02, 0.1, 0.02),
+                "authority": (0.02, 0.1, 0.02),
+            })
+            logger.info(f"Trained weights: {best_w}")
+            logger.info(f"Training metrics: {metrics}")
+            if args.preset_name:
+                pid = wt.save_preset(args.preset_name, best_w, metrics, {
+                    "search_space": space or "default",
+                    "doc": args.doc,
+                    "sources": args.sources,
+                })
+                logger.info(f"Saved preset: {pid}")
+            return
         # Load configuration
         config = Config(args.config) if args.config else Config()
         
@@ -272,7 +374,9 @@ def main() -> None:
     args = parse_arguments()
     
     # Set up logging
-    if args.quiet:
+    if getattr(args, "minimal", False):
+        log_level = "ERROR"
+    elif args.quiet:
         log_level = "ERROR"
     elif args.verbose:
         log_level = "DEBUG"

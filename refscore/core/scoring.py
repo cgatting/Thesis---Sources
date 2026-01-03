@@ -236,7 +236,9 @@ class ScoringEngine:
         try:
             if self.embedder is not None:
                 # Use sentence transformers
-                embeddings = self.embedder.encode([text1, text2], normalize_embeddings=True)
+                embeddings = self.embedder.encode(
+                    [text1, text2], normalize_embeddings=True, show_progress_bar=False
+                )
                 similarity = float(max(0.0, min(1.0, (embeddings[0] @ embeddings[1]))))
                 return similarity
         except Exception:

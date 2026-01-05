@@ -40,11 +40,13 @@ class Settings:
     })
     
     nlp_models: Dict[str, Any] = field(default_factory=lambda: {
-        "sentence_transformer": "all-MiniLM-L6-v2",
+        "sentence_transformer": "all-mpnet-base-v2",
+        "cross_encoder": "cross-encoder/ms-marco-MiniLM-L-6-v2",
         "spacy_model": "en_core_web_sm",
         "fallback_to_blank_spacy": True,
         "use_tfidf_fallback": True,
         "use_jaccard_fallback": True,
+        "rerank_threshold": 0.25,
     })
     
     processing: Dict[str, Any] = field(default_factory=lambda: {

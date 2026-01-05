@@ -162,7 +162,8 @@ Examples:
     parser.add_argument(
         "--minimal",
         action="store_true",
-        help="Minimal output: suppress logs and show only progress bar/errors"
+        default=True,
+        help="Minimal output: suppress logs and show only progress bar/errors (Default: True)"
     )
     
     return parser.parse_args()
@@ -299,7 +300,7 @@ def run_analysis(args: argparse.Namespace) -> None:
         
         # Display results
         if not args.quiet:
-            print_results(scores, document, args.top_k)
+            print_results(scores, document, args.top_k, args.out)
         
         logger.info(f"Analysis completed successfully. Results saved to {args.out}")
         
@@ -317,15 +318,15 @@ def run_analysis(args: argparse.Namespace) -> None:
         sys.exit(1)
 
 
-def print_results(scores: List, document, top_k: int) -> None:
+def print_results(scores: List, document, top_k: int, out_dir: str) -> None:
     """
     Print analysis results to console.
     
     Args:
         scores: List of source scores
         document: Parsed document
-        scores: List of source scores
         top_k: Number of top results to show
+        out_dir: Output directory path
     """
     print("\n" + "="*80)
     print("REFSCORE ANALYSIS RESULTS")
@@ -361,9 +362,9 @@ def print_results(scores: List, document, top_k: int) -> None:
     
     print(f"\nResults saved to:")
     print("-" * 40)
-    print(f"Sources ranking: {args.out}/sources_ranked.json")
-    print(f"Section coverage: {args.out}/section_coverage.json")
-    print(f"Weak sentences: {args.out}/gaps.json")
+    print(f"Sources ranking: {out_dir}/sources_ranked.json")
+    print(f"Section coverage: {out_dir}/section_coverage.json")
+    print(f"Weak sentences: {out_dir}/gaps.json")
     print("="*80)
 
 
@@ -374,12 +375,13 @@ def main() -> None:
     args = parse_arguments()
     
     # Set up logging
-    if getattr(args, "minimal", False):
-        log_level = "ERROR"
+    # Prioritize verbose/quiet flags over minimal default
+    if args.verbose:
+        log_level = "DEBUG"
     elif args.quiet:
         log_level = "ERROR"
-    elif args.verbose:
-        log_level = "DEBUG"
+    elif getattr(args, "minimal", True):
+        log_level = "ERROR"
     else:
         log_level = "INFO"
     

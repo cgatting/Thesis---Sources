@@ -123,18 +123,16 @@ class DocumentParser:
             except ImportError:
                 raise ProcessingError("PDF parsing requires PyMuPDF (pip install PyMuPDF)")
             
-            doc = fitz.open(document_path)
-            
-            # Extract text from all pages
-            full_text = ""
-            for page_num, page in enumerate(doc):
-                try:
-                    page_text = page.get_text("text")
-                    full_text += f"\n{page_text}"
-                except Exception as e:
-                    log.warning(f"Failed to extract text from page {page_num}: {e}")
-            
-            doc.close()
+            with fitz.open(document_path) as doc:
+                page_count = len(doc)
+                # Extract text from all pages
+                full_text = ""
+                for page_num, page in enumerate(doc):
+                    try:
+                        page_text = page.get_text("text")
+                        full_text += f"\n{page_text}"
+                    except Exception as e:
+                        log.warning(f"Failed to extract text from page {page_num}: {e}")
             
             if not full_text.strip():
                 raise ProcessingError("No text could be extracted from PDF")
@@ -148,11 +146,11 @@ class DocumentParser:
                 "type": "pdf",
                 "section_count": len(ordered_sections),
                 "sentence_count": len(sentences),
-                "page_count": len(doc)
+                "page_count": page_count
             }
             
             log.info(f"Parsed PDF document: {len(sentences)} sentences, "
-                    f"{len(ordered_sections)} sections, {len(doc)} pages")
+                    f"{len(ordered_sections)} sections, {page_count} pages")
             
             return DocPack(sentences, ordered_sections, metadata)
             
@@ -235,6 +233,15 @@ class DocumentParser:
         # Sentence splitting pattern
         sentence_pattern = re.compile(r'(?<=[.!?])\s+(?=[A-Z0-9\\])')
         
+        # Fallback: if no sections detected, treat entire document as a single section
+        if not sections or len(sections) < 2:
+            sections = [(0, "Document"), (len(content), "__END__")]
+        else:
+            # Ensure we cover any leading content before the first detected section
+            first_pos, first_name = sections[0]
+            if first_pos > 0:
+                sections = [(0, "Document")] + sections
+
         for i in range(len(sections) - 1):
             start_pos, section_name = sections[i]
             end_pos = sections[i + 1][0]

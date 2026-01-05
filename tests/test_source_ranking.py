@@ -1,203 +1,115 @@
 import unittest
-from types import SimpleNamespace
-
-# Load SourceRankingEngine from DEEPSEARCH.py
 import sys
 import os
+import json
+from unittest.mock import MagicMock, patch
+import numpy as np
+try:
+    import sklearn.metrics.pairwise
+except ImportError:
+    pass
 
+# Add parent directory to path to import refscore
 ROOT = os.path.dirname(os.path.abspath(__file__))
 PARENT = os.path.dirname(ROOT)
 if PARENT not in sys.path:
     sys.path.insert(0, PARENT)
 
-# Inject lightweight stubs for optional heavy dependencies to allow import
-class _StubYake:
-    class KeywordExtractor:
-        def __init__(self, **kwargs):
-            pass
-        def extract_keywords(self, text):
-            return [("stub", 0.1)]
-
-sys.modules.setdefault('yake', _StubYake())
-
-class _StubST:
-    class SentenceTransformer:
-        def __init__(self, *args, **kwargs):
-            pass
-        def to(self, device):
-            return self
-        def encode(self, text, convert_to_tensor=True):
-            class _T:
-                def cpu(self):
-                    return self
-                def numpy(self):
-                    import numpy as np
-                    return np.zeros((384,), dtype=float)
-                def reshape(self, *a, **k):
-                    return self
-            return _T()
-
-sys.modules.setdefault('sentence_transformers', _StubST())
-
-class _StubTF:
-    def pipeline(*args, **kwargs):
-        def _run(x, **k):
-            return [{"summary_text": str(x)[:60]}]
-        return _run
-
-sys.modules.setdefault('transformers', _StubTF())
-
-class _StubTorch:
-    class cuda:
-        @staticmethod
-        def is_available():
-            return False
-    class multiprocessing:
-        @staticmethod
-        def set_start_method(*a, **k):
-            pass
-    class _Dev:
-        def __init__(self, *a, **k):
-            pass
-    def device(*a, **k):
-        return _StubTorch._Dev()
-    class _NoGrad:
-        def __enter__(self):
-            return None
-        def __exit__(self, exc_type, exc, tb):
-            return False
-    def no_grad():
-        return _StubTorch._NoGrad()
-
-sys.modules.setdefault('torch', _StubTorch())
-
-import types
-_sk = types.ModuleType('sklearn')
-_sk_metrics = types.ModuleType('sklearn.metrics')
-_sk_pairwise = types.ModuleType('sklearn.metrics.pairwise')
-def _cosine_similarity(a, b):
-    import numpy as np
-    return np.array([[0.5]])
-_sk_pairwise.cosine_similarity = _cosine_similarity
-sys.modules.setdefault('sklearn', _sk)
-sys.modules.setdefault('sklearn.metrics', _sk_metrics)
-sys.modules.setdefault('sklearn.metrics.pairwise', _sk_pairwise)
-
-from DEEPSEARCH import SourceRankingEngine
-
-
-class FakeKeywordExtractor:
-    def extract_keywords(self, text):
-        return [("neural", 0.1), ("network", 0.2), ("learning", 0.3), ("deep", 0.4)]
-
-
-class FakeNLP:
-    def __init__(self):
-        self.keyword_extractor = FakeKeywordExtractor()
-        self._scores = {}
-
-    def refine_query(self, sentence: str) -> str:
-        return "refined query"
-
-    def calculate_similarity(self, text1: str, text2: str) -> float:
-        return self._scores.get(text2, 0.5)
-
-    def set_similarity(self, combined_text: str, score: float):
-        self._scores[combined_text] = score
-
-    def summarizer(self, text, max_length=32, min_length=8, do_sample=False):
-        return [{"summary_text": text[:60]}]
-
-
-class FakeSearchEngine:
-    def __init__(self, items):
-        self._items = items
-
-    def search_papers(self, query: str, limit: int = 50):
-        return self._items[:limit]
-
-
-class FakeCache:
-    def __init__(self):
-        self._store = {}
-
-    def get_cached_result(self, key: str):
-        return self._store.get(key)
-
-    def cache_result(self, key: str, data: dict):
-        self._store[key] = data
-
+from refscore.core.source_ranking import SourceRankingEngine
 
 class TestSourceRankingEngine(unittest.TestCase):
     def setUp(self):
-        self.settings = {
-            'model_settings': {'max_length': 20, 'min_length': 2},
-            'search_settings': {'max_results': 50},
-            'similarity_threshold': 0.7,
-        }
-        self.nlp = FakeNLP()
+        # Patch SentenceTransformer to avoid loading real model
+        self.st_patcher = patch('sentence_transformers.SentenceTransformer')
+        self.mock_st_class = self.st_patcher.start()
+        self.mock_model = MagicMock()
+        self.mock_st_class.return_value = self.mock_model
+        
+        # Patch requests
+        self.requests_patcher = patch('refscore.core.source_ranking.requests')
+        self.mock_requests = self.requests_patcher.start()
 
-    def test_extract_key_terms(self):
-        engine = SourceRankingEngine(self.settings, self.nlp, FakeSearchEngine([]), FakeCache())
-        terms = engine.extract_key_terms("Deep neural network learning")
+    def tearDown(self):
+        self.st_patcher.stop()
+        self.requests_patcher.stop()
+
+    def test_extract_terms(self):
+        engine = SourceRankingEngine()
+        # SourceRankingEngine.extract_terms uses regex r"[A-Za-z]{4,}"
+        text = "Deep neural network learning algorithm"
+        terms = engine.extract_terms(text)
+        
         self.assertIn("neural", terms)
         self.assertIn("network", terms)
-
-    def test_rank_top_sources_orders_by_similarity(self):
-        items = [
-            {
-                'title': ['Paper A'], 'abstract': 'alpha', 'DOI': '10.1/a',
-                'container-title': ['Journal'], 'URL': 'http://example.com/a',
-                'author': [{'family': 'Smith', 'given': 'J'}],
-                'published-print': {'date-parts': [[2020]]}
-            },
-            {
-                'title': ['Paper B'], 'abstract': 'beta', 'DOI': '10.1/b',
-                'container-title': ['Journal'], 'URL': 'http://example.com/b',
-                'author': [{'family': 'Lee', 'given': 'K'}],
-                'published-print': {'date-parts': [[2021]]}
+        self.assertIn("learning", terms)
+        self.assertIn("algorithm", terms)
+        self.assertIn("deep", terms) 
+        
+    def test_search_and_rank(self):
+        engine = SourceRankingEngine()
+        
+        # Mock requests response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            'message': {
+                'items': [
+                    {
+                        'title': ['Paper A'],
+                        'abstract': 'Abstract A',
+                        'DOI': '10.1000/a',
+                        'container-title': ['Journal A']
+                    },
+                    {
+                        'title': ['Paper B'],
+                        'abstract': 'Abstract B',
+                        'DOI': '10.1000/b',
+                        'container-title': ['Journal B']
+                    }
+                ]
             }
-        ]
-        search = FakeSearchEngine(items)
-        engine = SourceRankingEngine(self.settings, self.nlp, search, FakeCache())
-        self.nlp.set_similarity("Paper A alpha", 0.9)
-        self.nlp.set_similarity("Paper B beta", 0.6)
-        results = engine.rank_top_sources("doc", rows=50, threshold=0.0, use_refine=False)
+        }
+        self.mock_requests.get.return_value = mock_response
+        
+        # Mock embedding behavior (just needs to return something iterable/numpy-like)
+        self.mock_model.encode.return_value = np.array([1.0])
+        
+        # Mock _similarity to avoid sklearn issues and control ranking
+        # We want Paper A (first item) to have higher score than Paper B (second item)
+        # The rank loop calls _similarity for each item.
+        engine._similarity = MagicMock(side_effect=[0.9, 0.5])
+        
+        results = engine.rank("doc text", rows=10)
+        
+        self.assertEqual(len(results), 2)
+        # Results should be sorted by similarity (A > B)
         self.assertEqual(results[0]['title'], 'Paper A')
-        self.assertGreaterEqual(results[0]['score'], results[1]['score'])
+        self.assertEqual(results[1]['title'], 'Paper B')
 
-    def test_handles_empty_input_and_no_results(self):
-        search = FakeSearchEngine([])
-        engine = SourceRankingEngine(self.settings, self.nlp, search, FakeCache())
-        results = engine.rank_top_sources("", rows=10, threshold=0.0, use_refine=True)
+    def test_handles_empty_input(self):
+        engine = SourceRankingEngine()
+        results = engine.rank("", rows=10)
         self.assertEqual(results, [])
 
-    def test_caching_works(self):
-        items = [{
-            'title': ['Cached'], 'abstract': 'text', 'DOI': '10.1/x',
-            'container-title': ['J'], 'URL': 'http://example.com/x',
-        }]
-        cache = FakeCache()
-        search = FakeSearchEngine(items)
-        engine = SourceRankingEngine(self.settings, self.nlp, search, cache)
-        r1 = engine.rank_top_sources("doc", rows=10, threshold=0.0, use_refine=False)
-        # mutate search to prove caching returns same
-        search._items = []
-        r2 = engine.rank_top_sources("doc", rows=10, threshold=0.0, use_refine=False)
-        self.assertEqual(r1, r2)
-
-    def test_link_generation_and_summary_truncation(self):
-        items = [{
-            'title': ['Link Only'], 'abstract': '', 'DOI': '10.1/doi',
-            'container-title': ['J'],
-        }]
-        search = FakeSearchEngine(items)
-        engine = SourceRankingEngine(self.settings, self.nlp, search, FakeCache())
-        self.nlp.set_similarity("Link Only ", 0.8)
-        res = engine.rank_top_sources("doc", rows=10, threshold=0.0, use_refine=False)
-        self.assertTrue(res[0]['link'].startswith('https://doi.org/'))
-        self.assertIsInstance(res[0]['summary'], str)
-
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_caching(self):
+        engine = SourceRankingEngine()
+        
+        # Mock requests response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            'message': { 'items': [{'title': ['A'], 'container-title':['J'], 'DOI':'1'}] }
+        }
+        self.mock_requests.get.return_value = mock_response
+        self.mock_model.encode.return_value = np.array([1.0])
+        
+        # Mock _similarity
+        engine._similarity = MagicMock(return_value=0.9)
+         
+        # First call
+        engine.rank("doc", rows=10)
+        self.assertEqual(self.mock_requests.get.call_count, 1)
+         
+        # Second call (should be cached)
+        engine.rank("doc", rows=10)
+        self.assertEqual(self.mock_requests.get.call_count, 1)

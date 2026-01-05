@@ -541,10 +541,25 @@ class SettingsTab(QWidget):
         try:
             if hasattr(parent, "analysis_tab"):
                 doc_path = parent.analysis_tab.get_document_path()
+            
+            # Collect sources from both tabs
+            sources_tab_paths = []
+            analysis_tab_paths = []
+            
             if hasattr(parent, "sources_tab"):
-                src_paths = parent.sources_tab.get_source_paths()
-            if not src_paths and hasattr(parent, "analysis_tab"):
-                src_paths = parent.analysis_tab.get_source_paths()
+                sources_tab_paths = parent.sources_tab.get_source_paths()
+            
+            if hasattr(parent, "analysis_tab"):
+                analysis_tab_paths = parent.analysis_tab.get_source_paths()
+            
+            # Combine and deduplicate
+            all_paths = sources_tab_paths + analysis_tab_paths
+            seen = set()
+            for p in all_paths:
+                if p not in seen:
+                    src_paths.append(p)
+                    seen.add(p)
+                    
             if not doc_path and hasattr(parent, "relevant_tab"):
                 try:
                     files = getattr(parent.relevant_tab, "uploaded_files", [])

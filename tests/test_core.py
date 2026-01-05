@@ -260,7 +260,8 @@ class TestDocumentParser:
         
         assert ".tex" in formats
         assert ".pdf" in formats
-        assert len(formats) == 2
+        assert ".docx" in formats
+        assert len(formats) == 3
     
     def test_validate_document(self, sample_latex_file, sample_config):
         """Test document validation."""
@@ -271,7 +272,7 @@ class TestDocumentParser:
         
         # Invalid document
         assert not parser.validate_document("nonexistent_file.tex")
-        assert not parser.validate_document("test.docx")
+        assert not parser.validate_document("test.odt")
 
 
 class TestSourceLoader:
@@ -350,6 +351,10 @@ class TestScoringEngine:
     def test_alignment_score(self, sample_config):
         """Test text alignment scoring."""
         engine = ScoringEngine(sample_config)
+        # Force fallback to Jaccard for deterministic testing and to avoid model loading issues
+        engine.embedder = None
+        engine.cross_encoder = None
+        engine.tfidf_vectorizer = None
         
         # Similar texts should have high alignment
         text1 = "machine learning algorithms for natural language processing"

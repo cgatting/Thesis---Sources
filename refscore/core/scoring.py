@@ -93,20 +93,44 @@ class ScoringEngine:
         # Initialize NLP components
         self._initialize_nlp_components()
         
+        # Cache for embeddings to optimize performance
+        self._embedding_cache: Dict[str, Any] = {}
+        
         log.info("Scoring engine initialized")
     
     def _initialize_nlp_components(self) -> None:
         """Initialize optional NLP components with fallbacks."""
         # Embeddings
         self.embedder = None
+        self.cross_encoder = None
         self.tfidf_vectorizer = None
         self.cosine_similarity = None
+        self.rerank_threshold = 0.25
         
         try:
-            from sentence_transformers import SentenceTransformer
-            self.embedder = SentenceTransformer("all-MiniLM-L6-v2")
-            log.info("Loaded SentenceTransformer all-MiniLM-L6-v2")
-        except Exception:
+            from sentence_transformers import SentenceTransformer, CrossEncoder
+            
+            # Get model names from config or use defaults
+            bi_model = "all-mpnet-base-v2"
+            cross_model = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+            
+            if self.config:
+                nlp_config = self.config.get_nlp_model_config()
+                bi_model = nlp_config.get("sentence_transformer", bi_model)
+                cross_model = nlp_config.get("cross_encoder", cross_model)
+                self.rerank_threshold = float(nlp_config.get("rerank_threshold", 0.25))
+
+            self.embedder = SentenceTransformer(bi_model)
+            log.info(f"Loaded SentenceTransformer {bi_model}")
+            
+            try:
+                self.cross_encoder = CrossEncoder(cross_model)
+                log.info(f"Loaded CrossEncoder {cross_model}")
+            except Exception as e:
+                log.warning(f"Failed to load CrossEncoder: {e}")
+                
+        except Exception as e:
+            log.warning(f"Failed to load sentence-transformers: {e}")
             try:
                 from sklearn.feature_extraction.text import TfidfVectorizer
                 from sklearn.metrics.pairwise import cosine_similarity
@@ -166,7 +190,21 @@ class ScoringEngine:
             
             # Calculate overall score as average of sentence scores
             sentence_scores = [self._weighted_score(ev, weights) for ev in per_sentence.values()]
-            refscore = sum(sentence_scores) / max(1, len(sentence_scores))
+            
+            # Filter out zero scores to avoid dragging down average with irrelevant sentences
+            non_zero_scores = [s for s in sentence_scores if s > 0.05]
+            if non_zero_scores:
+                # Use top 50% of matching sentences to represent document-level alignment
+                non_zero_scores.sort(reverse=True)
+                top_k = max(1, len(non_zero_scores) // 2)
+                refscore = sum(non_zero_scores[:top_k]) / top_k
+            else:
+                refscore = 0.0
+            
+            # Boost score if at least one strong match exists
+            max_sentence_score = max(sentence_scores) if sentence_scores else 0.0
+            if max_sentence_score > 0.5:
+                refscore = (refscore + max_sentence_score) / 2
             
             scores.append(SourceScore(source, round(refscore, 4), per_sentence))
         
@@ -235,13 +273,53 @@ class ScoringEngine:
         text2 = _normalize(text2)
         try:
             if self.embedder is not None:
-                # Use sentence transformers
-                embeddings = self.embedder.encode(
-                    [text1, text2], normalize_embeddings=True, show_progress_bar=False
-                )
-                similarity = float(max(0.0, min(1.0, (embeddings[0] @ embeddings[1]))))
-                return similarity
-        except Exception:
+                # Max-Sim Implementation
+                
+                # Check cache for text1 (document sentence)
+                if text1 in self._embedding_cache:
+                    emb1 = self._embedding_cache[text1]
+                else:
+                    emb1 = self.embedder.encode(text1, normalize_embeddings=True, show_progress_bar=False)
+                    self._embedding_cache[text1] = emb1
+
+                # Check cache for text2 (source text)
+                if text2 in self._embedding_cache:
+                    source_sentences, emb2_list = self._embedding_cache[text2]
+                else:
+                    # Split text2 (source) into sentences
+                    source_sentences = self._split_into_sentences(text2)
+                    if not source_sentences:
+                        source_sentences = [text2]
+                    
+                    emb2_list = self.embedder.encode(source_sentences, normalize_embeddings=True, show_progress_bar=False)
+                    self._embedding_cache[text2] = (source_sentences, emb2_list)
+                
+                # Compute cosine similarities
+                # emb1: (dim,), emb2_list: (n, dim)
+                # Ensure correct shapes for matrix multiplication
+                if len(emb2_list.shape) == 1:
+                    emb2_list = emb2_list.reshape(1, -1)
+                    
+                similarities = emb1 @ emb2_list.T
+                
+                max_sim_idx = similarities.argmax()
+                max_sim = float(similarities[max_sim_idx])
+                
+                # Cross-Encoder Re-Ranking
+                if max_sim > self.rerank_threshold and self.cross_encoder is not None:
+                    try:
+                        best_sentence = source_sentences[max_sim_idx]
+                        # Predict returns logits for ms-marco models
+                        cross_score = self.cross_encoder.predict([(text1, best_sentence)])[0]
+                        # Apply sigmoid to get 0-1 score
+                        return self._sigmoid(float(cross_score))
+                    except Exception as e:
+                        log.warning(f"Cross-encoder failed: {e}")
+                        pass
+                
+                return float(max(0.0, min(1.0, max_sim)))
+        except Exception as e:
+            # log.debug(f"Embedding alignment failed: {e}")
             pass
         
         try:
@@ -255,6 +333,31 @@ class ScoringEngine:
         
         # Fallback to Jaccard similarity
         return self._jaccard_similarity(text1, text2)
+
+    def _split_into_sentences(self, text: str) -> List[str]:
+        """Split text into sentences for granular comparison."""
+        if not text:
+            return []
+            
+        if self.nlp is not None:
+            try:
+                doc = self.nlp(text)
+                return [sent.text.strip() for sent in doc.sents if sent.text.strip()]
+            except Exception:
+                pass
+        
+        # Fallback splitting
+        import re
+        parts = re.split(r'[.!?]+(?:\s+|$)', text)
+        return [p.strip() for p in parts if p.strip()]
+
+    def _sigmoid(self, x: float) -> float:
+        """Apply sigmoid function."""
+        try:
+            return 1 / (1 + math.exp(-x))
+        except OverflowError:
+            return 0.0 if x < 0 else 1.0
+
     
     def _jaccard_similarity(self, text1: str, text2: str) -> float:
         """Compute Jaccard similarity between two texts."""
@@ -412,24 +515,32 @@ class ScoringEngine:
         return pairs
     
     def _method_metric_overlap(self, text1: str, text2: str) -> float:
-        """Compute method and metric overlap score."""
-        tokens1 = set(self._tokenize(text1.lower()))
-        tokens2 = set(self._tokenize(text2.lower()))
+        """Compute method and metric overlap score with weighted matching."""
+        # Convert to lower case for case-insensitive matching
+        t1_lower = text1.lower()
+        t2_lower = text2.lower()
         
-        hits = 0
+        # Tokenize for single-word matching
+        tokens1 = set(self._tokenize(t1_lower))
+        tokens2 = set(self._tokenize(t2_lower))
+        
+        total_score = 0.0
+        
         for method_token in self.METHOD_TOKENS:
             parts = method_token.split()
             if len(parts) == 1:
-                # Single token match
+                # Single token match (Weight: 0.5)
                 if method_token in tokens1 and method_token in tokens2:
-                    hits += 1
+                    total_score += 0.5
             else:
-                # Phrase match
-                if method_token in text1.lower() and method_token in text2.lower():
-                    hits += 1
+                # Phrase match (Weight: 2.0)
+                # Check if phrase exists in both texts
+                if method_token in t1_lower and method_token in t2_lower:
+                    total_score += 2.0
         
         # Normalize to [0, 1] range
-        return min(1.0, hits / 6.0)
+        # Threshold set to 6.0 (e.g., 3 phrases or 12 single tokens to saturate)
+        return min(1.0, total_score / 6.0)
     
     def _recency_score(self, year: Optional[int], half_life: int = 6) -> float:
         """Compute recency score based on publication year."""

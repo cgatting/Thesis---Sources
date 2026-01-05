@@ -16,6 +16,8 @@ RefScore is a sophisticated academic tool that scores uploaded references (from 
 - **Multi-format Support**: Process .bib, .json, .csv files and DOI lists
 - **Document Analysis**: Support for LaTeX (.tex) and PDF documents
 - **Advanced Scoring**: Six-dimensional scoring system with configurable weights
+- **Hybrid Retrieval System**: Combines Bi-Encoder (`all-mpnet-base-v2`) and Cross-Encoder (`ms-marco-MiniLM-L-6-v2`) for state-of-the-art relevance matching
+- **Max-Sim Granularity**: Precise sentence-level claim verification
 - **Fallback Mechanisms**: Graceful degradation when optional libraries unavailable
 
 ### GUI Features

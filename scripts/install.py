@@ -44,7 +44,7 @@ def install_dependencies():
     run_command(f"{sys.executable} -m pip install --upgrade pip", "Upgrading pip")
     
     # Install requirements
-    requirements_file = Path(__file__).parent / "requirements.txt"
+    requirements_file = Path(__file__).parent.parent / "requirements.txt"
     if requirements_file.exists():
         result = run_command(
             f"{sys.executable} -m pip install -r {requirements_file}",

@@ -8,7 +8,7 @@ view, edit, and manage academic source files and their metadata.
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox, QPushButton,
     QLabel, QLineEdit, QTextEdit, QTableWidget, QTableWidgetItem,
-    QHeaderView, QAbstractItemView, QSplitter, QFrame
+    QHeaderView, QAbstractItemView, QSplitter, QFrame, QFileDialog, QMessageBox
 )
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont
@@ -182,7 +182,11 @@ class SourcesTab(QWidget):
         )
         
         if file_paths:
-            self.load_source_files(file_paths)
+            # Append new files to existing ones, avoiding duplicates
+            current_set = set(self.source_files)
+            new_files = [f for f in file_paths if f not in current_set]
+            if new_files:
+                self.load_source_files(self.source_files + new_files)
     
     def remove_source_file(self):
         """Remove selected source file."""
